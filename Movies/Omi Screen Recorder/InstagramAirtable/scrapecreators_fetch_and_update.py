@@ -10,6 +10,14 @@ PROFILES_TABLE = "Instagram Profiles"
 REELS_TABLE = "Reels"
 SCRAPECREATORS_API_KEY = os.environ['SCRAPECREATORS_API_KEY']
 
+# Reduced to 3 usernames for faster testing
+usernames = [
+    'emiladrisse', 'emilaphonia', 'emilaphyssa'
+]
+
+# Full list of usernames (commented out for faster testing)
+# Uncomment and replace the above list when ready for full data collection
+"""
 usernames = [
     'emiladrisse', 'emilaphonia', 'emilaphyssa', 'emilaphyxia', 'emilarentha',
     'emilarionda', 'emilarionth', 'emilarionyx', 'emilarithia', 'emilarthesia',
@@ -18,6 +26,7 @@ usernames = [
     'emilavionae', 'emilavostra', 'emilaxireth', 'emilaylaraz', 'emilayrissa',
     'emilayzora', 'emilazarethra', 'emilazirion', 'emilazuvara', 'emilazyrel'
 ]
+"""
 
 # Initialize API and tables using the new syntax
 api = Api(AIRTABLE_TOKEN)
@@ -440,6 +449,7 @@ def test_reels_api_call(username, api_key=None):
 def main():
     """Main function to fetch data and update Airtable"""
     print("Starting Instagram data collection with ScrapeCreators...")
+    print(f"🧪 TESTING MODE: Processing only {len(usernames)} usernames for faster testing")
     
     # Test the new reels API with the first username to ensure it's working
     test_username = usernames[0] if usernames else "emiladrisse"
@@ -448,7 +458,7 @@ def main():
     # Test the new reels API
     result = test_reels_api_call(test_username)
     if result.get("success"):
-        print("✅ Reels API test successful! Proceeding with full data collection...")
+        print("✅ Reels API test successful! Proceeding with data collection...")
     else:
         print(f"❌ Reels API test failed: {result.get('error')}")
         print("Continuing with profile data collection only...")
