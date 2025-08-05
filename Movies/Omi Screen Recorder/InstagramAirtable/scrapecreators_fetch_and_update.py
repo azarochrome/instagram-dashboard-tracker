@@ -129,13 +129,10 @@ def update_profile_in_airtable(username, profile_data):
         # Extract biography
         bio = user_data.get('biography', '') or user_data.get('bio', '')
         
-        # Extract profile picture URL
-        profile_picture = user_data.get('profile_pic_url', '') or user_data.get('profile_picture', '')
-        
         # Check if profile exists
         existing_records = profiles_table.all(formula=f"{{Instagram Handle}} = '{username}'")
         
-        # Use field names from README
+        # Use field names from README - removed Profile Picture field completely
         record_data = {
             "Instagram Handle": username,
             "Profile Name": full_name,
@@ -143,12 +140,6 @@ def update_profile_in_airtable(username, profile_data):
             "Biography": bio,  # Changed from "Bio" to "Biography"
             "Last Checked": datetime.now().strftime("%Y-%m-%d")  # Use date format instead of ISO
         }
-        
-        # Only add profile picture if it's a valid URL and field exists
-        if profile_picture and profile_picture.startswith('http'):
-            # For attachment fields, we need to provide the URL in a specific format
-            # But since this is causing issues, let's skip it for now
-            pass
         
         if existing_records:
             # Update existing record
@@ -240,11 +231,7 @@ def update_reels_in_airtable(username, reels_data):
             # Check if reel exists
             existing_records = reels_table.all(formula=f"{{Reel ID}} = '{reel_id}'")
             
-            # Get the profile record ID for linking
-            profile_records = profiles_table.all(formula=f"{{Instagram Handle}} = '{username}'")
-            profile_record_id = profile_records[0]['id'] if profile_records else None
-            
-            # Use field names from README
+            # Use field names from README - temporarily remove Profile linking to debug
             record_data = {
                 "Reel ID": reel_id,
                 "Reel URL": reel_url,
@@ -255,9 +242,8 @@ def update_reels_in_airtable(username, reels_data):
                 "Date Posted": created_at
             }
             
-            # Only add profile link if we found the profile record
-            if profile_record_id:
-                record_data["Profile"] = [profile_record_id]  # Link to profile record
+            # TODO: Fix Profile linking once we confirm the field structure
+            # For now, let's get the reels working without the Profile link
             
             if existing_records:
                 # Update existing record
