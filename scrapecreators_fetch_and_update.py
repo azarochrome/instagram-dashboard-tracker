@@ -259,7 +259,8 @@ def update_reels_in_airtable(username, reels_data):
                 "Views": view_count,
                 "Likes": like_count,
                 "Comments": comment_count,
-                "Date Posted": created_at
+                "Date Posted": created_at,
+                "Last Checked": datetime.now().strftime("%d/%m/%y %H:%M")  # Airtable format: dd/mm/yy hh:mm
             }
             
             # TODO: Fix Profile linking once we confirm the field structure
