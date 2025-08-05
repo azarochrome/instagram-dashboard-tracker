@@ -10,15 +10,27 @@ PROFILES_TABLE = "Instagram Profiles"
 REELS_TABLE = "Reels"
 SCRAPECREATORS_API_KEY = os.environ['SCRAPECREATORS_API_KEY']
 
-# PRODUCTION MODE: Full list of 30 usernames
-# This will process all 30 users for complete data collection
+# PRODUCTION MODE: Complete list of all usernames
+# This will process all users for complete data collection
 usernames = [
     'emiladrisse', 'emilaphonia', 'emilaphyssa', 'emilaphyxia', 'emilarentha',
     'emilarionda', 'emilarionth', 'emilarionyx', 'emilarithia', 'emilarthesia',
     'emilarthona', 'emilaryaeth', 'emilasteria', 'emilastriva', 'emilathione',
     'emilavareth', 'emilavarethra', 'emilavessiaz', 'emilavessra', 'emilavindra',
     'emilavionae', 'emilavostra', 'emilaxireth', 'emilaylaraz', 'emilayrissa',
-    'emilayzora', 'emilazarethra', 'emilazirion', 'emilazuvara', 'emilazyrel'
+    'emilayzora', 'emilazarethra', 'emilazirion', 'emilazuvara', 'emilazyrel',
+    'emilazelyra', 'emilazentha', 'emilazenthe', 'emilazenthae', 'emilazenya',
+    'emilazetra', 'emilaziona', 'emilazionyx', 'emilazirexa', 'emilaznara',
+    'emilazoniah', 'emilazrya', 'emilazrynna', 'emilazythra', 'emilenthessa',
+    'emilenthira', 'emilestine', 'emilethoria', 'emileveraith', 'emilevontra',
+    'emilevorae', 'emilevura', 'emilezariah', 'emilezethra', 'emilindrya',
+    'emilionthra', 'emiliorixa', 'emilistraen', 'emilithyana', 'emilixarya',
+    'emilixurina', 'emilondara', 'emilondraxa', 'emilonexra', 'emilorenxia',
+    'emiloresta', 'emilorexia', 'emiloryllia', 'emiloryneth', 'emilorynxa',
+    'emilourithia', 'emilovandria', 'emilovaxa', 'emilovendra', 'emilovessra',
+    'emilovetha', 'emilozanna', 'emilozuria', 'emiltharion', 'emilundraeth',
+    'emilunessa', 'emilunethra', 'emilunetra', 'emilurayna', 'emilurellia',
+    'emilurethia', 'emilurithae', 'emiluryona', 'emilustraxa', 'emiluvetha'
 ]
 
 # TESTING MODE (commented out for production)
