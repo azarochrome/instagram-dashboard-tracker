@@ -10,17 +10,8 @@ PROFILES_TABLE = "Instagram Profiles"
 REELS_TABLE = "Reels"
 SCRAPECREATORS_API_KEY = os.environ['SCRAPECREATORS_API_KEY']
 
-# TESTING MODE: Only 3 usernames for faster testing
-# This should process only 3 users, not 30!
-usernames = [
-    'emiladrisse', 
-    'emilaphonia', 
-    'emilaphyssa'
-]
-
-# FULL LIST (commented out for testing)
-# When ready for production, uncomment this and comment out the above list:
-"""
+# PRODUCTION MODE: Full list of 30 usernames
+# This will process all 30 users for complete data collection
 usernames = [
     'emiladrisse', 'emilaphonia', 'emilaphyssa', 'emilaphyxia', 'emilarentha',
     'emilarionda', 'emilarionth', 'emilarionyx', 'emilarithia', 'emilarthesia',
@@ -28,6 +19,15 @@ usernames = [
     'emilavareth', 'emilavarethra', 'emilavessiaz', 'emilavessra', 'emilavindra',
     'emilavionae', 'emilavostra', 'emilaxireth', 'emilaylaraz', 'emilayrissa',
     'emilayzora', 'emilazarethra', 'emilazirion', 'emilazuvara', 'emilazyrel'
+]
+
+# TESTING MODE (commented out for production)
+# When testing, uncomment this and comment out the above list:
+"""
+usernames = [
+    'emiladrisse', 
+    'emilaphonia', 
+    'emilaphyssa'
 ]
 """
 
@@ -461,8 +461,7 @@ def test_reels_api_call(username, api_key=None):
 def main():
     """Main function to fetch data and update Airtable"""
     print("Starting Instagram data collection with ScrapeCreators...")
-    print(f"🧪 TESTING MODE: Processing only {len(usernames)} usernames for faster testing")
-    print(f"🔍 DEBUG: Usernames list contains: {usernames}")
+    print(f"🚀 PRODUCTION MODE: Processing all {len(usernames)} usernames for complete data collection")
     print(f"🔍 DEBUG: Total usernames: {len(usernames)}")
     
     # Test the new reels API with the first username to ensure it's working
