@@ -150,7 +150,7 @@ def update_profile_in_airtable(username, profile_data):
             "Profile Name": full_name,
             "Follower Count": follower_count,
             "Biography": bio,  # Changed from "Bio" to "Biography"
-            "Last Checked": datetime.now().strftime("%Y-%m-%d")  # Use date format instead of ISO
+            "Last Checked": datetime.now().strftime("%d/%m/%y %H:%M")  # Airtable format: dd/mm/yy hh:mm
         }
         
         if existing_records:
