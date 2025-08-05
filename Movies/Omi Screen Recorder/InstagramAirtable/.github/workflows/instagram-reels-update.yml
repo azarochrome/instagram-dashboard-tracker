@@ -13,7 +13,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        ref: master  # Explicitly use master branch
+        ref: main  # Explicitly use main branch
       
     - name: Set up Python
       uses: actions/setup-python@v4
