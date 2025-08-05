@@ -227,6 +227,13 @@ def update_reels_in_airtable(username, reels_data):
                 if isinstance(text_info, list) and text_info:
                     caption = text_info[0].get('text', '')
             
+            # Clean up caption - if it's a dict, try to extract text
+            if isinstance(caption, dict):
+                if 'text' in caption:
+                    caption = caption['text']
+                else:
+                    caption = str(caption)  # Convert to string if it's a complex object
+            
             # Create reel URL using the code
             reel_code = media.get('code', '')
             reel_url = f"https://instagram.com/reel/{reel_code}" if reel_code else ''
@@ -243,9 +250,10 @@ def update_reels_in_airtable(username, reels_data):
             # Check if reel exists
             existing_records = reels_table.all(formula=f"{{Reel ID}} = '{reel_id}'")
             
-            # Use field names from README - temporarily remove Profile linking to debug
+            # Use field names from README - add username for reference
             record_data = {
                 "Reel ID": reel_id,
+                "Profile": username,  # Add username to show which profile this reel belongs to
                 "Reel URL": reel_url,
                 "Caption": str(caption)[:1000] if caption else '',  # Limit caption length and ensure it's a string
                 "Views": view_count,
