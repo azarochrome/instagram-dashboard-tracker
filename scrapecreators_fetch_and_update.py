@@ -77,8 +77,16 @@ def get_profile_data(username):
         response.raise_for_status()
         data = response.json()
         
-        # Debug: Print the response structure
-        print(f"Profile API response for {username}: {data}")
+        # Check if the API returned success but with an error message
+        if data.get('success') and data.get('error'):
+            error_message = data.get('message', 'Unknown error')
+            print(f"API error for {username}: {error_message}")
+            return None
+        
+        # Check if we have valid user data
+        if not data.get('success') or not data.get('data', {}).get('user'):
+            print(f"No valid user data for {username}")
+            return None
         
         return data
     except requests.exceptions.RequestException as e:
@@ -113,8 +121,10 @@ def get_reels_data(username):
         response.raise_for_status()
         data = response.json()
         
-        # Debug: Print the response structure
-        print(f"Reels API response for {username}: {len(data) if isinstance(data, list) else 'Not a list'} items")
+        # Validate that we got a list of reels
+        if not isinstance(data, list):
+            print(f"Invalid reels data format for {username}: expected list, got {type(data)}")
+            return None
         
         return data
     except requests.exceptions.RequestException as e:
@@ -163,7 +173,7 @@ def update_profile_in_airtable(username, profile_data):
             "Profile Name": full_name,
             "Follower Count": follower_count,
             "Biography": bio,  # Changed from "Bio" to "Biography"
-            "Last Checked": datetime.now().strftime("%d/%m/%y %H:%M")  # Airtable format: dd/mm/yy hh:mm
+            "Last Checked": datetime.now().isoformat()  # Use ISO format for Airtable compatibility
         }
         
         if existing_records:
@@ -178,6 +188,8 @@ def update_profile_in_airtable(username, profile_data):
             
     except Exception as e:
         print(f"Failed to update profile for {username} in Airtable: {e}")
+        import traceback
+        traceback.print_exc()
 
 def update_reels_in_airtable(username, reels_data):
     """Update or create reel records in Airtable - Updated for new API structure"""
@@ -196,11 +208,17 @@ def update_reels_in_airtable(username, reels_data):
     
     try:
         for reel_item in reels_data:
-            # Extract the media object from each reel item
-            media = reel_item.get('media')
-            if not media:
-                print(f"No media object found in reel item for {username}")
-                continue
+            # The API response structure has changed - data is directly in reel_item, not nested under 'media'
+            # Check if we have the old structure (with 'media') or new structure (direct data)
+            if 'media' in reel_item:
+                # Old structure - extract from media object
+                media = reel_item.get('media')
+                if not media:
+                    print(f"No media object found in reel item for {username}")
+                    continue
+            else:
+                # New structure - data is directly in reel_item
+                media = reel_item
                 
             # Extract reel data from the media object
             reel_id = media.get('pk', '') or media.get('id', '')
@@ -273,11 +291,8 @@ def update_reels_in_airtable(username, reels_data):
                 "Likes": like_count,
                 "Comments": comment_count,
                 "Date Posted": created_at,
-                "Last Checked": datetime.now().strftime("%d/%m/%y %H:%M")  # Airtable format: dd/mm/yy hh:mm
+                "Last Checked": datetime.now().isoformat()  # Use ISO format for Airtable compatibility
             }
-            
-            # TODO: Fix Profile linking once we confirm the field structure
-            # For now, let's get the reels working without the Profile link
             
             if existing_records:
                 # Update existing record
@@ -294,203 +309,15 @@ def update_reels_in_airtable(username, reels_data):
         import traceback
         traceback.print_exc()
 
-def test_api_response(username):
-    """Test function to debug API responses"""
-    print(f"\n=== Testing API for {username} ===")
-    
-    # Test profile endpoint
-    profile_url = f"{BASE_URL}/profile"
-    profile_params = {"handle": username}
-    
-    try:
-        profile_response = requests.get(profile_url, headers=HEADERS, params=profile_params, timeout=30)
-        print(f"Profile Status: {profile_response.status_code}")
-        print(f"Profile Headers: {dict(profile_response.headers)}")
-        if profile_response.status_code == 200:
-            profile_data = profile_response.json()
-            print(f"Profile Data: {profile_data}")
-        else:
-            print(f"Profile Error: {profile_response.text}")
-    except Exception as e:
-        print(f"Profile Exception: {e}")
-    
-    # Test reels endpoint - Updated to new endpoint
-    reels_url = f"{BASE_URL}/user/reels/simple"
-    reels_params = {"handle": username, "amount": 5, "trim": False}
-    
-    try:
-        reels_response = requests.get(reels_url, headers=HEADERS, params=reels_params, timeout=60)  # Increased timeout
-        print(f"Reels Status: {reels_response.status_code}")
-        print(f"Reels Headers: {dict(reels_response.headers)}")
-        if reels_response.status_code == 200:
-            reels_data = reels_response.json()
-            print(f"Reels Data: {len(reels_data) if isinstance(reels_data, list) else 'Not a list'} items")
-            if isinstance(reels_data, list) and reels_data:
-                print(f"First reel structure: {reels_data[0]}")
-        else:
-            print(f"Reels Error: {reels_response.text}")
-    except Exception as e:
-        print(f"Reels Exception: {e}")
-    
-    print("=== End Test ===\n")
-
-def test_reels_api_call(username, api_key=None):
-    """
-    Standalone function to test the Instagram reels API call
-    
-    Args:
-        username (str): Instagram username/handle
-        api_key (str, optional): API key (uses environment variable if not provided)
-    
-    Returns:
-        dict: Response data or error information
-    """
-    import os
-    
-    # Use provided API key or environment variable
-    if api_key is None:
-        api_key = os.environ.get('SCRAPECREATORS_API_KEY')
-        if not api_key:
-            return {"error": "No API key provided or found in environment variables"}
-    
-    # API configuration
-    base_url = "https://api.scrapecreators.com/v1/instagram"
-    endpoint = "/user/reels/simple"
-    url = f"{base_url}{endpoint}"
-    
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-    
-    params = {
-        "handle": username,
-        "amount": 10,  # Number of reels to fetch
-        "trim": False  # Get full response
-    }
-    
-    print(f"Making API call to: {url}")
-    print(f"Parameters: {params}")
-    print(f"Headers: {dict(headers)}")
-    
-    try:
-        # Make the API request
-        response = requests.get(url, headers=headers, params=params, timeout=60)  # Increased timeout
-        
-        print(f"\nResponse Status: {response.status_code}")
-        print(f"Response Headers: {dict(response.headers)}")
-        
-        # Handle different status codes
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                print(f"✅ Success! Retrieved {len(data) if isinstance(data, list) else 'data'} items")
-                
-                # Parse and display reel information
-                if isinstance(data, list) and data:
-                    print(f"\n📊 Reels Summary for @{username}:")
-                    print(f"Total reels found: {len(data)}")
-                    
-                    for i, reel_item in enumerate(data[:3], 1):  # Show first 3 reels
-                        media = reel_item.get('media', {})
-                        reel_id = media.get('pk', 'N/A')
-                        play_count = media.get('play_count', 0)
-                        like_count = media.get('like_count', 0)
-                        comment_count = media.get('comment_count', 0)
-                        code = media.get('code', 'N/A')
-                        
-                        print(f"  Reel {i}:")
-                        print(f"    ID: {reel_id}")
-                        print(f"    Code: {code}")
-                        print(f"    Views: {play_count:,}")
-                        print(f"    Likes: {like_count:,}")
-                        print(f"    Comments: {comment_count:,}")
-                        print(f"    URL: https://instagram.com/reel/{code}")
-                        print()
-                
-                return {
-                    "success": True,
-                    "status_code": response.status_code,
-                    "data": data,
-                    "reel_count": len(data) if isinstance(data, list) else 0
-                }
-                
-            except ValueError as e:
-                error_msg = f"Failed to parse JSON response: {e}"
-                print(f"❌ {error_msg}")
-                return {"error": error_msg, "status_code": response.status_code, "raw_response": response.text}
-        
-        elif response.status_code == 400:
-            error_msg = f"Bad request - check parameters"
-            print(f"❌ {error_msg}: {response.text}")
-            return {"error": error_msg, "status_code": response.status_code, "details": response.text}
-        
-        elif response.status_code == 401:
-            error_msg = f"Unauthorized - check API key"
-            print(f"❌ {error_msg}")
-            return {"error": error_msg, "status_code": response.status_code}
-        
-        elif response.status_code == 402:
-            error_msg = f"Payment required - API quota exceeded"
-            print(f"❌ {error_msg}")
-            return {"error": error_msg, "status_code": response.status_code}
-        
-        elif response.status_code == 404:
-            error_msg = f"Reels not found for user @{username}"
-            print(f"❌ {error_msg}")
-            return {"error": error_msg, "status_code": response.status_code}
-        
-        elif response.status_code == 429:
-            error_msg = f"Rate limited - too many requests"
-            print(f"❌ {error_msg}")
-            return {"error": error_msg, "status_code": response.status_code}
-        
-        else:
-            error_msg = f"Unexpected status code: {response.status_code}"
-            print(f"❌ {error_msg}: {response.text}")
-            return {"error": error_msg, "status_code": response.status_code, "details": response.text}
-    
-    except requests.exceptions.Timeout:
-        error_msg = "Request timed out"
-        print(f"❌ {error_msg}")
-        return {"error": error_msg}
-    
-    except requests.exceptions.ConnectionError:
-        error_msg = "Connection error - check internet connection"
-        print(f"❌ {error_msg}")
-        return {"error": error_msg}
-    
-    except requests.exceptions.RequestException as e:
-        error_msg = f"Request failed: {e}"
-        print(f"❌ {error_msg}")
-        return {"error": error_msg}
-    
-    except Exception as e:
-        error_msg = f"Unexpected error: {e}"
-        print(f"❌ {error_msg}")
-        return {"error": error_msg}
-
-
 def main():
     """Main function to fetch data and update Airtable"""
     print("Starting Instagram data collection with ScrapeCreators...")
     print(f"🚀 PRODUCTION MODE: Processing all {len(usernames)} usernames for complete data collection")
-    print(f"🔍 DEBUG: Total usernames: {len(usernames)}")
-    
-    # Test the new reels API with the first username to ensure it's working
-    test_username = usernames[0] if usernames else "emiladrisse"
-    print(f"Testing new reels API with username: {test_username}")
-    
-    # Test the new reels API
-    result = test_reels_api_call(test_username)
-    if result.get("success"):
-        print("✅ Reels API test successful! Proceeding with data collection...")
-    else:
-        print(f"❌ Reels API test failed: {result.get('error')}")
-        print("Continuing with profile data collection only...")
     
     successful_profiles = 0
     successful_reels = 0
+    failed_profiles = 0
+    failed_reels = 0
     
     for i, username in enumerate(usernames, 1):
         print(f"\nProcessing {username} ({i}/{len(usernames)})...")
@@ -498,20 +325,34 @@ def main():
         # Get profile data
         profile_data = get_profile_data(username)
         if profile_data:
-            update_profile_in_airtable(username, profile_data)
-            successful_profiles += 1
+            try:
+                update_profile_in_airtable(username, profile_data)
+                successful_profiles += 1
+            except Exception as e:
+                print(f"Failed to update profile for {username}: {e}")
+                failed_profiles += 1
+        else:
+            failed_profiles += 1
         
         # Get reels data
         reels_data = get_reels_data(username)
         if reels_data:
-            update_reels_in_airtable(username, reels_data)
-            successful_reels += 1
+            try:
+                update_reels_in_airtable(username, reels_data)
+                successful_reels += 1
+            except Exception as e:
+                print(f"Failed to update reels for {username}: {e}")
+                failed_reels += 1
+        else:
+            failed_reels += 1
         
         # Small delay to be respectful to the API
         time.sleep(2)
     
     print(f"\nData collection and Airtable update complete.")
-    print(f"Successfully processed {successful_profiles} profiles and {successful_reels} reels out of {len(usernames)} usernames.")
+    print(f"✅ Successfully processed {successful_profiles} profiles and {successful_reels} reels")
+    print(f"❌ Failed to process {failed_profiles} profiles and {failed_reels} reels")
+    print(f"📊 Total usernames processed: {len(usernames)}")
 
 if __name__ == "__main__":
     main()
